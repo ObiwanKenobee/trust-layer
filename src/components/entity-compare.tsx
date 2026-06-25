@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTrustStore, type Entity } from "@/lib/trust-data";
-import { TrustRadar } from "./trust-radar";
+
 
 const PALETTE = ["#22d3ee", "#fbbf24", "#a78bfa", "#34d399"];
 
