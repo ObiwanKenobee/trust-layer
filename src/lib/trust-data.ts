@@ -231,6 +231,56 @@ const seedPredictions: PredictionYear[] = [
   { year: 2030, predicted: 93, actual: null, confidence: 87, notes: "Forecast · institutional anchor adoption." },
 ];
 
+const mkNodes = (prefix: string, count: number, region: string[], baseUptime: number, baseStake: number): ValidatorNode[] =>
+  Array.from({ length: count }, (_, i) => {
+    const seed = (prefix.charCodeAt(0) + i * 7) % 100;
+    const uptime = +(baseUptime + ((seed % 30) - 15) / 50).toFixed(2);
+    const status: ValidatorNode["status"] = uptime < 95 ? "probation" : seed === 13 ? "slashed" : "active";
+    return {
+      id: `${prefix}-${i + 1}`,
+      alias: `${prefix.toUpperCase()}-${(1000 + i * 37).toString(36).toUpperCase()}`,
+      region: region[i % region.length],
+      uptime,
+      stake: +(baseStake * (0.6 + ((seed % 80) / 100))).toFixed(1),
+      attestations: 800 + (seed * 13) % 2200,
+      status,
+      lastSlash: status === "slashed" ? "2026-04-12" : null,
+    };
+  });
+
+const seedValidators: ValidatorClass[] = [
+  {
+    id: "univ", name: "Universities", count: 2148, share: 17, consensus: 98.2,
+    description: "Academic institutions providing peer-reviewed methodology audits.",
+    nodes: mkNodes("univ", 6, ["Nairobi", "Zurich", "São Paulo", "Singapore", "Boston", "Lagos"], 99.1, 12.4),
+  },
+  {
+    id: "aud", name: "Auditors", count: 1902, share: 15, consensus: 97.8,
+    description: "Big-Four and regional firms running budget & disclosure traces.",
+    nodes: mkNodes("aud", 6, ["London", "New York", "Tokyo", "Frankfurt", "Dubai", "Mumbai"], 98.6, 22.1),
+  },
+  {
+    id: "ngo", name: "NGOs", count: 2540, share: 20, consensus: 95.4,
+    description: "Field-based watchdogs cross-checking on-the-ground outcomes.",
+    nodes: mkNodes("ngo", 6, ["Geneva", "Kigali", "Manila", "Bogotá", "Berlin", "Nairobi"], 96.4, 4.8),
+  },
+  {
+    id: "sen", name: "Sensors", count: 3120, share: 25, consensus: 99.1,
+    description: "Satellite, IoT and remote-sensing meshes emitting raw ground-truth.",
+    nodes: mkNodes("sen", 6, ["LEO", "MEO", "Brazil", "Indonesia", "Iberia", "Sahel"], 99.4, 1.9),
+  },
+  {
+    id: "cit", name: "Citizens", count: 1840, share: 15, consensus: 91.3,
+    description: "Verified citizen attestation pools weighted by reputation.",
+    nodes: mkNodes("cit", 6, ["Global", "EU", "LATAM", "APAC", "MENA", "SSA"], 94.2, 0.6),
+  },
+  {
+    id: "ai", name: "AI Agents", count: 882, share: 8, consensus: 99.6,
+    description: "Atlas-Δ cross-source diff agents under constitutional constraint.",
+    nodes: mkNodes("ai", 6, ["Edge-A", "Edge-B", "Edge-C", "Core-1", "Core-2", "Core-3"], 99.7, 8.2),
+  },
+];
+
 /* ---------------- compute ---------------- */
 
 export function computeRuleChecks(e: Entity): RuleCheck[] {
