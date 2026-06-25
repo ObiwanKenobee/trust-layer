@@ -92,7 +92,6 @@ function TrustTerminal() {
   const store = useTrustStore();
   const [selected, setSelected] = useState<Entity | null>(null);
   const [selectedValidator, setSelectedValidator] = useState<ValidatorClass | null>(null);
-  const store = useTrustStore();
 
   const avgByKind = (kind: Entity["kind"]) => {
     const xs = store.entities.filter((e) => e.kind === kind);
