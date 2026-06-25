@@ -43,14 +43,6 @@ const verificationSteps = [
   { label: "Re-attestation Window …", state: "pending" },
 ];
 
-const validatorTypes = [
-  { name: "Universities", count: 2_148, share: 17 },
-  { name: "Auditors", count: 1_902, share: 15 },
-  { name: "NGOs", count: 2_540, share: 20 },
-  { name: "Sensors", count: 3_120, share: 25 },
-  { name: "Citizens", count: 1_840, share: 15 },
-  { name: "AI Agents", count: 882, share: 8 },
-];
 
 const genome = [
   { label: "Integrity", value: 93 },
