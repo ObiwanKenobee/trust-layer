@@ -459,6 +459,40 @@ export function toggleEvidence(entityId: string, evidenceId: string) {
   emit();
 }
 
+export interface NewEvidenceInput {
+  entityId: string;
+  source: string;
+  sourceKind: EvidenceItem["sourceKind"];
+  weight: number;
+  confidence: number;
+  attests: number;
+}
+
+export function addEvidence(input: NewEvidenceInput): EvidenceItem | null {
+  const e = state.entities.find((x) => x.id === input.entityId);
+  if (!e) return null;
+  const ev: EvidenceItem = {
+    id: `${input.entityId}-u${Math.random().toString(36).slice(2, 7)}`,
+    source: input.source.trim(),
+    sourceKind: input.sourceKind,
+    weight: Math.max(0.01, Math.min(0.5, input.weight)),
+    confidence: Math.max(40, Math.min(99, input.confidence)),
+    attests: Math.max(0, Math.min(100, input.attests)),
+    valid: true,
+  };
+  e.evidence = [...e.evidence, ev];
+  const prev = e.score;
+  e.score = computeTrustScore(e).score;
+  e.delta = +(((e.score - prev) / Math.max(0.001, prev)) * 100).toFixed(2);
+  for (const i of state.instruments) {
+    if (i.entityId !== input.entityId) continue;
+    i.history = [...i.history.slice(-23), e.score];
+    i.price = priceFor(i, e.score);
+  }
+  emit();
+  return ev;
+}
+
 export interface Trade {
   id: string;
   ticker: string;
