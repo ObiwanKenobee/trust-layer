@@ -46,6 +46,29 @@ export interface Entity {
   delta: number;
   evidence: EvidenceItem[];
   liquidity: number; // USD billions
+  /** Recent score history for sparklines / comparison overlays. */
+  history?: number[];
+}
+
+export interface ValidatorNode {
+  id: string;
+  alias: string;
+  region: string;
+  uptime: number; // %
+  stake: number; // USD millions at risk
+  attestations: number; // attestations submitted (24h)
+  status: "active" | "probation" | "slashed";
+  lastSlash: string | null; // ISO-ish label
+}
+
+export interface ValidatorClass {
+  id: string;
+  name: string;
+  count: number;
+  share: number; // % of network
+  consensus: number; // %
+  description: string;
+  nodes: ValidatorNode[];
 }
 
 export interface Instrument {
@@ -208,6 +231,56 @@ const seedPredictions: PredictionYear[] = [
   { year: 2030, predicted: 93, actual: null, confidence: 87, notes: "Forecast · institutional anchor adoption." },
 ];
 
+const mkNodes = (prefix: string, count: number, region: string[], baseUptime: number, baseStake: number): ValidatorNode[] =>
+  Array.from({ length: count }, (_, i) => {
+    const seed = (prefix.charCodeAt(0) + i * 7) % 100;
+    const uptime = +(baseUptime + ((seed % 30) - 15) / 50).toFixed(2);
+    const status: ValidatorNode["status"] = uptime < 95 ? "probation" : seed === 13 ? "slashed" : "active";
+    return {
+      id: `${prefix}-${i + 1}`,
+      alias: `${prefix.toUpperCase()}-${(1000 + i * 37).toString(36).toUpperCase()}`,
+      region: region[i % region.length],
+      uptime,
+      stake: +(baseStake * (0.6 + ((seed % 80) / 100))).toFixed(1),
+      attestations: 800 + (seed * 13) % 2200,
+      status,
+      lastSlash: status === "slashed" ? "2026-04-12" : null,
+    };
+  });
+
+const seedValidators: ValidatorClass[] = [
+  {
+    id: "univ", name: "Universities", count: 2148, share: 17, consensus: 98.2,
+    description: "Academic institutions providing peer-reviewed methodology audits.",
+    nodes: mkNodes("univ", 6, ["Nairobi", "Zurich", "São Paulo", "Singapore", "Boston", "Lagos"], 99.1, 12.4),
+  },
+  {
+    id: "aud", name: "Auditors", count: 1902, share: 15, consensus: 97.8,
+    description: "Big-Four and regional firms running budget & disclosure traces.",
+    nodes: mkNodes("aud", 6, ["London", "New York", "Tokyo", "Frankfurt", "Dubai", "Mumbai"], 98.6, 22.1),
+  },
+  {
+    id: "ngo", name: "NGOs", count: 2540, share: 20, consensus: 95.4,
+    description: "Field-based watchdogs cross-checking on-the-ground outcomes.",
+    nodes: mkNodes("ngo", 6, ["Geneva", "Kigali", "Manila", "Bogotá", "Berlin", "Nairobi"], 96.4, 4.8),
+  },
+  {
+    id: "sen", name: "Sensors", count: 3120, share: 25, consensus: 99.1,
+    description: "Satellite, IoT and remote-sensing meshes emitting raw ground-truth.",
+    nodes: mkNodes("sen", 6, ["LEO", "MEO", "Brazil", "Indonesia", "Iberia", "Sahel"], 99.4, 1.9),
+  },
+  {
+    id: "cit", name: "Citizens", count: 1840, share: 15, consensus: 91.3,
+    description: "Verified citizen attestation pools weighted by reputation.",
+    nodes: mkNodes("cit", 6, ["Global", "EU", "LATAM", "APAC", "MENA", "SSA"], 94.2, 0.6),
+  },
+  {
+    id: "ai", name: "AI Agents", count: 882, share: 8, consensus: 99.6,
+    description: "Atlas-Δ cross-source diff agents under constitutional constraint.",
+    nodes: mkNodes("ai", 6, ["Edge-A", "Edge-B", "Edge-C", "Core-1", "Core-2", "Core-3"], 99.7, 8.2),
+  },
+];
+
 /* ---------------- compute ---------------- */
 
 export function computeRuleChecks(e: Entity): RuleCheck[] {
@@ -280,18 +353,32 @@ interface StoreState {
   entities: Entity[];
   instruments: Instrument[];
   predictions: PredictionYear[];
+  validators: ValidatorClass[];
   /** Monotonic tick counter for cheap re-renders. */
   tick: number;
 }
 
 let state: StoreState = (() => {
-  const entities = seedEntities.map((e) => ({ ...e, evidence: e.evidence.map((v) => ({ ...v })) }));
-  for (const e of entities) e.score = computeTrustScore(e).score;
+  const entities = seedEntities.map((e) => ({
+    ...e,
+    evidence: e.evidence.map((v) => ({ ...v })),
+    history: [] as number[],
+  }));
+  for (const e of entities) {
+    e.score = computeTrustScore(e).score;
+    e.history = Array.from({ length: 18 }, (_, i) => +(e.score + (Math.sin(i / 2) * 1.2)).toFixed(2));
+  }
   const instruments = seedInstruments.map((i) => {
     const e = entities.find((x) => x.id === i.entityId)!;
     return { ...i, history: [e.score, e.score, e.score], price: priceFor(i, e.score) };
   });
-  return { entities, instruments, predictions: seedPredictions.map((p) => ({ ...p })), tick: 0 };
+  return {
+    entities,
+    instruments,
+    predictions: seedPredictions.map((p) => ({ ...p })),
+    validators: seedValidators,
+    tick: 0,
+  };
 })();
 
 const listeners = new Set<() => void>();
@@ -326,6 +413,14 @@ function ensureTicking() {
       const prev = e.score;
       e.score = computeTrustScore(e).score;
       e.delta = +(((e.score - prev) / Math.max(0.001, prev)) * 100 + e.delta * 0.92).toFixed(2);
+      e.history = [...(e.history ?? []).slice(-29), e.score];
+    }
+    for (const v of state.validators) {
+      v.consensus = +Math.max(80, Math.min(99.9, v.consensus + (Math.random() - 0.5) * 0.15)).toFixed(2);
+      for (const n of v.nodes) {
+        n.attestations += Math.floor((Math.random() - 0.3) * 12);
+        if (n.status === "active") n.uptime = +Math.max(94, Math.min(100, n.uptime + (Math.random() - 0.5) * 0.05)).toFixed(2);
+      }
     }
     for (const i of state.instruments) {
       const e = state.entities.find((x) => x.id === i.entityId)!;
@@ -362,6 +457,40 @@ export function toggleEvidence(entityId: string, evidenceId: string) {
     i.price = priceFor(i, e.score);
   }
   emit();
+}
+
+export interface NewEvidenceInput {
+  entityId: string;
+  source: string;
+  sourceKind: EvidenceItem["sourceKind"];
+  weight: number;
+  confidence: number;
+  attests: number;
+}
+
+export function addEvidence(input: NewEvidenceInput): EvidenceItem | null {
+  const e = state.entities.find((x) => x.id === input.entityId);
+  if (!e) return null;
+  const ev: EvidenceItem = {
+    id: `${input.entityId}-u${Math.random().toString(36).slice(2, 7)}`,
+    source: input.source.trim(),
+    sourceKind: input.sourceKind,
+    weight: Math.max(0.01, Math.min(0.5, input.weight)),
+    confidence: Math.max(40, Math.min(99, input.confidence)),
+    attests: Math.max(0, Math.min(100, input.attests)),
+    valid: true,
+  };
+  e.evidence = [...e.evidence, ev];
+  const prev = e.score;
+  e.score = computeTrustScore(e).score;
+  e.delta = +(((e.score - prev) / Math.max(0.001, prev)) * 100).toFixed(2);
+  for (const i of state.instruments) {
+    if (i.entityId !== input.entityId) continue;
+    i.history = [...i.history.slice(-23), e.score];
+    i.price = priceFor(i, e.score);
+  }
+  emit();
+  return ev;
 }
 
 export interface Trade {

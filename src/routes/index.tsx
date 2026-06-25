@@ -7,7 +7,10 @@ import { EntityDrilldown } from "@/components/entity-drilldown";
 import { ConstitutionEngine } from "@/components/constitution-engine";
 import { TrustExchange } from "@/components/trust-exchange";
 import { AccuracyVault } from "@/components/accuracy-vault";
-import { useTrustStore, type Entity } from "@/lib/trust-data";
+import { ValidatorDrilldown } from "@/components/validator-drilldown";
+import { EntityCompare } from "@/components/entity-compare";
+import { EvidenceSubmission } from "@/components/evidence-submission";
+import { useTrustStore, type Entity, type ValidatorClass } from "@/lib/trust-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,14 +43,6 @@ const verificationSteps = [
   { label: "Re-attestation Window …", state: "pending" },
 ];
 
-const validatorTypes = [
-  { name: "Universities", count: 2_148, share: 17 },
-  { name: "Auditors", count: 1_902, share: 15 },
-  { name: "NGOs", count: 2_540, share: 20 },
-  { name: "Sensors", count: 3_120, share: 25 },
-  { name: "Citizens", count: 1_840, share: 15 },
-  { name: "AI Agents", count: 882, share: 8 },
-];
 
 const genome = [
   { label: "Integrity", value: 93 },
@@ -88,6 +83,7 @@ function StatRow({ label, value, tone = "default" }: { label: string; value: str
 function TrustTerminal() {
   const store = useTrustStore();
   const [selected, setSelected] = useState<Entity | null>(null);
+  const [selectedValidator, setSelectedValidator] = useState<ValidatorClass | null>(null);
 
   const avgByKind = (kind: Entity["kind"]) => {
     const xs = store.entities.filter((e) => e.kind === kind);
@@ -278,6 +274,24 @@ function TrustTerminal() {
           <TrustExchange />
         </section>
 
+        {/* ENTITY COMPARE */}
+        <section id="compare" className="col-span-12 panel">
+          <PanelHeader index="SCREEN_05B" title="Sovereign Spread · Entity Comparison" status="LIVE" />
+          <div className="p-5">
+            <EntityCompare />
+          </div>
+        </section>
+
+        {/* EVIDENCE SUBMISSION */}
+        <section id="submit" className="col-span-12 panel">
+          <PanelHeader index="SCREEN_05C" title="Attestation Submission · Public Pipeline" status="OPEN" />
+          <div className="p-5">
+            <EvidenceSubmission />
+          </div>
+        </section>
+
+
+
         {/* VALIDATOR NETWORK */}
         <section id="validators" className="col-span-12 panel lg:col-span-8 flex flex-col">
           <PanelHeader index="SCREEN_06" title="Validator Network · Live" status="CONSENSUS_97.4%" />
@@ -302,28 +316,39 @@ function TrustTerminal() {
           </div>
 
           <div className="p-6">
-            <div className="mb-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Composition · Validator Class
+            <div className="mb-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span>Composition · Validator Class</span>
+              <span className="text-trust-blue">Click class for node drilldown</span>
             </div>
             <div className="flex h-3 w-full overflow-hidden rounded-sm bg-grid">
-              {validatorTypes.map((v, i) => (
+              {store.validators.map((v, i) => (
                 <div
-                  key={v.name}
+                  key={v.id}
                   className={i % 2 === 0 ? "bg-trust-blue" : "bg-trust-green"}
                   style={{ width: `${v.share}%`, opacity: 1 - i * 0.1 }}
                 />
               ))}
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-2 md:grid-cols-3">
-              {validatorTypes.map((v) => (
-                <div key={v.name} className="flex items-center justify-between border-b border-border/60 py-2 font-mono text-xs">
-                  <span className="text-muted-foreground">{v.name}</span>
+            <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-2 xl:grid-cols-3">
+              {store.validators.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedValidator(v)}
+                  className="group flex items-center justify-between gap-3 border-b border-border/60 py-2 text-left font-mono text-xs transition-colors hover:border-trust-blue/60"
+                >
+                  <span className="flex flex-col">
+                    <span className="text-foreground group-hover:text-trust-blue">{v.name}</span>
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                      {v.share}% share · {v.consensus.toFixed(2)}% consensus
+                    </span>
+                  </span>
                   <span className="text-foreground">{v.count.toLocaleString()}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         </section>
+
 
         {/* PHASE ROADMAP */}
         <section className="col-span-12 panel lg:col-span-4 flex flex-col">
@@ -400,6 +425,12 @@ function TrustTerminal() {
       </footer>
 
       <EntityDrilldown entity={selected} open={!!selected} onOpenChange={(v) => !v && setSelected(null)} />
+      <ValidatorDrilldown
+        validator={selectedValidator}
+        open={!!selectedValidator}
+        onOpenChange={(v) => !v && setSelectedValidator(null)}
+      />
+
     </div>
   );
 }
