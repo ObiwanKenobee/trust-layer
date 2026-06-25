@@ -353,18 +353,32 @@ interface StoreState {
   entities: Entity[];
   instruments: Instrument[];
   predictions: PredictionYear[];
+  validators: ValidatorClass[];
   /** Monotonic tick counter for cheap re-renders. */
   tick: number;
 }
 
 let state: StoreState = (() => {
-  const entities = seedEntities.map((e) => ({ ...e, evidence: e.evidence.map((v) => ({ ...v })) }));
-  for (const e of entities) e.score = computeTrustScore(e).score;
+  const entities = seedEntities.map((e) => ({
+    ...e,
+    evidence: e.evidence.map((v) => ({ ...v })),
+    history: [] as number[],
+  }));
+  for (const e of entities) {
+    e.score = computeTrustScore(e).score;
+    e.history = Array.from({ length: 18 }, (_, i) => +(e.score + (Math.sin(i / 2) * 1.2)).toFixed(2));
+  }
   const instruments = seedInstruments.map((i) => {
     const e = entities.find((x) => x.id === i.entityId)!;
     return { ...i, history: [e.score, e.score, e.score], price: priceFor(i, e.score) };
   });
-  return { entities, instruments, predictions: seedPredictions.map((p) => ({ ...p })), tick: 0 };
+  return {
+    entities,
+    instruments,
+    predictions: seedPredictions.map((p) => ({ ...p })),
+    validators: seedValidators,
+    tick: 0,
+  };
 })();
 
 const listeners = new Set<() => void>();
