@@ -7,7 +7,10 @@ import { EntityDrilldown } from "@/components/entity-drilldown";
 import { ConstitutionEngine } from "@/components/constitution-engine";
 import { TrustExchange } from "@/components/trust-exchange";
 import { AccuracyVault } from "@/components/accuracy-vault";
-import { useTrustStore, type Entity } from "@/lib/trust-data";
+import { ValidatorDrilldown } from "@/components/validator-drilldown";
+import { EntityCompare } from "@/components/entity-compare";
+import { EvidenceSubmission } from "@/components/evidence-submission";
+import { useTrustStore, type Entity, type ValidatorClass } from "@/lib/trust-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
