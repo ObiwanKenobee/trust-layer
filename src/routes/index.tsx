@@ -324,28 +324,39 @@ function TrustTerminal() {
           </div>
 
           <div className="p-6">
-            <div className="mb-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Composition · Validator Class
+            <div className="mb-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span>Composition · Validator Class</span>
+              <span className="text-trust-blue">Click class for node drilldown</span>
             </div>
             <div className="flex h-3 w-full overflow-hidden rounded-sm bg-grid">
-              {validatorTypes.map((v, i) => (
+              {store.validators.map((v, i) => (
                 <div
-                  key={v.name}
+                  key={v.id}
                   className={i % 2 === 0 ? "bg-trust-blue" : "bg-trust-green"}
                   style={{ width: `${v.share}%`, opacity: 1 - i * 0.1 }}
                 />
               ))}
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-2 md:grid-cols-3">
-              {validatorTypes.map((v) => (
-                <div key={v.name} className="flex items-center justify-between border-b border-border/60 py-2 font-mono text-xs">
-                  <span className="text-muted-foreground">{v.name}</span>
+            <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-2 xl:grid-cols-3">
+              {store.validators.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedValidator(v)}
+                  className="group flex items-center justify-between gap-3 border-b border-border/60 py-2 text-left font-mono text-xs transition-colors hover:border-trust-blue/60"
+                >
+                  <span className="flex flex-col">
+                    <span className="text-foreground group-hover:text-trust-blue">{v.name}</span>
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                      {v.share}% share · {v.consensus.toFixed(2)}% consensus
+                    </span>
+                  </span>
                   <span className="text-foreground">{v.count.toLocaleString()}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         </section>
+
 
         {/* PHASE ROADMAP */}
         <section className="col-span-12 panel lg:col-span-4 flex flex-col">
