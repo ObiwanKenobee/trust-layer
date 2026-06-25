@@ -148,17 +148,11 @@ function TrustRadarOverlay({
 }: {
   series: { name: string; color: string; points: { axis: string; value: number }[] }[];
 }) {
-  if (series.length === 0) {
-    return <TrustRadar data={[]} />;
-  }
-  if (series.length === 1) {
-    return <TrustRadar data={series[0].points} stroke={series[0].color} />;
-  }
   const size = 220;
   const cx = size / 2;
   const cy = size / 2;
   const r = 86;
-  const axes = series[0].points.map((p) => p.axis);
+  const axes = series[0]?.points.map((p) => p.axis) ?? ["Academic", "Audit", "Sensor", "NGO", "Citizen", "AI"];
   const angle = (i: number) => (Math.PI * 2 * i) / axes.length - Math.PI / 2;
   const pt = (v: number, i: number) => {
     const a = angle(i);
