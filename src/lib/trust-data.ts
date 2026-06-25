@@ -421,6 +421,7 @@ function ensureTicking() {
         n.attestations += Math.floor((Math.random() - 0.3) * 12);
         if (n.status === "active") n.uptime = +Math.max(94, Math.min(100, n.uptime + (Math.random() - 0.5) * 0.05)).toFixed(2);
       }
+    }
     for (const i of state.instruments) {
       const e = state.entities.find((x) => x.id === i.entityId)!;
       i.history = [...i.history.slice(-23), e.score];
