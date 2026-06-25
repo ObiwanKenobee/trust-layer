@@ -46,6 +46,29 @@ export interface Entity {
   delta: number;
   evidence: EvidenceItem[];
   liquidity: number; // USD billions
+  /** Recent score history for sparklines / comparison overlays. */
+  history?: number[];
+}
+
+export interface ValidatorNode {
+  id: string;
+  alias: string;
+  region: string;
+  uptime: number; // %
+  stake: number; // USD millions at risk
+  attestations: number; // attestations submitted (24h)
+  status: "active" | "probation" | "slashed";
+  lastSlash: string | null; // ISO-ish label
+}
+
+export interface ValidatorClass {
+  id: string;
+  name: string;
+  count: number;
+  share: number; // % of network
+  consensus: number; // %
+  description: string;
+  nodes: ValidatorNode[];
 }
 
 export interface Instrument {
