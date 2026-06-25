@@ -425,6 +425,12 @@ function TrustTerminal() {
       </footer>
 
       <EntityDrilldown entity={selected} open={!!selected} onOpenChange={(v) => !v && setSelected(null)} />
+      <ValidatorDrilldown
+        validator={selectedValidator}
+        open={!!selectedValidator}
+        onOpenChange={(v) => !v && setSelectedValidator(null)}
+      />
+
     </div>
   );
 }
