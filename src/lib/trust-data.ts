@@ -413,7 +413,14 @@ function ensureTicking() {
       const prev = e.score;
       e.score = computeTrustScore(e).score;
       e.delta = +(((e.score - prev) / Math.max(0.001, prev)) * 100 + e.delta * 0.92).toFixed(2);
+      e.history = [...(e.history ?? []).slice(-29), e.score];
     }
+    for (const v of state.validators) {
+      v.consensus = +Math.max(80, Math.min(99.9, v.consensus + (Math.random() - 0.5) * 0.15)).toFixed(2);
+      for (const n of v.nodes) {
+        n.attestations += Math.floor((Math.random() - 0.3) * 12);
+        if (n.status === "active") n.uptime = +Math.max(94, Math.min(100, n.uptime + (Math.random() - 0.5) * 0.05)).toFixed(2);
+      }
     for (const i of state.instruments) {
       const e = state.entities.find((x) => x.id === i.entityId)!;
       i.history = [...i.history.slice(-23), e.score];
