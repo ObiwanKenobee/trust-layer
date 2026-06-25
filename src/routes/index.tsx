@@ -282,6 +282,24 @@ function TrustTerminal() {
           <TrustExchange />
         </section>
 
+        {/* ENTITY COMPARE */}
+        <section id="compare" className="col-span-12 panel">
+          <PanelHeader index="SCREEN_05B" title="Sovereign Spread · Entity Comparison" status="LIVE" />
+          <div className="p-5">
+            <EntityCompare />
+          </div>
+        </section>
+
+        {/* EVIDENCE SUBMISSION */}
+        <section id="submit" className="col-span-12 panel lg:col-span-6">
+          <PanelHeader index="SCREEN_05C" title="Attestation Submission" status="OPEN" />
+          <div className="p-5">
+            <EvidenceSubmission />
+          </div>
+        </section>
+
+        {/* CONSTITUTION ENGINE PROMOTED (filling lg:col-span-6 slot) */}
+
         {/* VALIDATOR NETWORK */}
         <section id="validators" className="col-span-12 panel lg:col-span-8 flex flex-col">
           <PanelHeader index="SCREEN_06" title="Validator Network · Live" status="CONSENSUS_97.4%" />
