@@ -291,14 +291,14 @@ function TrustTerminal() {
         </section>
 
         {/* EVIDENCE SUBMISSION */}
-        <section id="submit" className="col-span-12 panel lg:col-span-6">
-          <PanelHeader index="SCREEN_05C" title="Attestation Submission" status="OPEN" />
+        <section id="submit" className="col-span-12 panel">
+          <PanelHeader index="SCREEN_05C" title="Attestation Submission · Public Pipeline" status="OPEN" />
           <div className="p-5">
             <EvidenceSubmission />
           </div>
         </section>
 
-        {/* CONSTITUTION ENGINE PROMOTED (filling lg:col-span-6 slot) */}
+
 
         {/* VALIDATOR NETWORK */}
         <section id="validators" className="col-span-12 panel lg:col-span-8 flex flex-col">
